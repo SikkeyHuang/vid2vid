@@ -28,6 +28,7 @@ input_nc = 1 if opt.label_nc != 0 else opt.input_nc
 
 save_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
 print('Doing %d frames' % len(dataset))
+process_time=[]
 for i, data in enumerate(dataset):
     if i >= opt.how_many:
         break    
@@ -38,8 +39,12 @@ for i, data in enumerate(dataset):
     A = Variable(data['A']).view(1, -1, input_nc, height, width)
     B = Variable(data['B']).view(1, -1, opt.output_nc, height, width) if len(data['B'].size()) > 2 else None
     inst = Variable(data['inst']).view(1, -1, 1, height, width) if len(data['inst'].size()) > 2 else None
+    t1= time.time()
     generated = model.inference(A, B, inst)
-    
+    t2=time.time()
+    print(t2-t1)
+
+    process_time.append(t2-t1)
     if opt.label_nc != 0:
         real_A = util.tensor2label(generated[1], opt.label_nc)
     else:
@@ -52,3 +57,6 @@ for i, data in enumerate(dataset):
     img_path = data['A_path']
     print('process image... %s' % img_path)
     visualizer.save_images(save_dir, visuals, img_path)
+
+print(sum(process_time)/len(process_time))
+print(sum(process_time[1:])/(len(process_time)-1))
